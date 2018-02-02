@@ -11,7 +11,7 @@
   "dependencies": {
     "auto-updater": "^1.0.2",
     "request": "^2.83.0",
-    "socket.io": "^2.0.4"
+    "socket.io": "^2.0.4",
     "yargs": "*"
   },
   "optionalDependencies": {
