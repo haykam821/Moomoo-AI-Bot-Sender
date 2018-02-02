@@ -8,7 +8,7 @@ const {spawn} = require("child_process");
 const yargs = require("yargs");
 
 const args = yargs
-  .command("probe", "Search public servers using a name on the leaderboard or tribe name.", {
+  .command(["probe", "search"], "Search public servers using a name on the leaderboard or tribe name.", {
 	"name": {
 		alias: ["n", "username"],
 		conflicts: "tribe", // until we get it them to work together, with an AND statement
