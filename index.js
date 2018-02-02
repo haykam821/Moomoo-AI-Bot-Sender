@@ -27,7 +27,7 @@ yargs
 		alias: ["party", "partyLink", "server", "serverLink", "serverAddress", "ip"],
 		description: "The party link or IP that the bots should connect with/to.",
 		type: "string"
-		
+
 	},
 	"amount": {
 		alias: ["num", "count", "number"],
@@ -67,7 +67,7 @@ yargs
 		description: "Enables bots trying to heal if they are damaged.",
 		type: "boolean",
 		default: true
-	}
+	},
 	"randSkins": {
 		description: "Whether to randomize the skin color of each bot.",
 		type: "boolean",
@@ -1218,7 +1218,7 @@ class Bot {
             p.y = data[2 + i * 13],
             p.angle = data[3 + i * 13],
             p.lastUpdated = Date.now()
-          } 
+          }
         }
         this.update();
       });
@@ -1356,7 +1356,7 @@ class Bot {
   disconnect(){
 		this.socket.disconnect();
   }
-  spawn(){  
+  spawn(){
     this.socket && this.socket.emit("1", {name: this.name, moofoll: true, skin: this.randSkins ? Math.round(Math.random() * 5) : 0});
 		this.socket && this.socket.emit("7", 1);
   }
