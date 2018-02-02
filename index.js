@@ -7,7 +7,7 @@ const {spawn} = require("child_process");
 
 const yargs = require("yargs");
 
-yargs
+const args = yargs
   .command("probe", "Search public servers using a name on the leaderboard or tribe name.", {
 	"name": {
 		alias: ["n", "username"],
@@ -96,8 +96,6 @@ try {
 
 const screen = computer && computer.getScreenSize();
 
-var args = parseFlags(process.argv.slice(2).join(" "), ["--num", "--link", "--tribe", "--name", "--randNames", "--randSkins", "--chat", "--ai", "--probeTribe", "--probeName", "--autoHeal"]);
-
 const httpServer = http.createServer((req, res) => {
   const args = url.parse(req.url, true).query;
   if (args.ownerID){
@@ -141,28 +139,6 @@ function get(url){
       }
     });
   });
-}
-
-function parseFlags(string, flags_array){
-	if (!Array.isArray(flags_array)){
-		return {error: "Array of flags not found."};
-	}
-	var return_object = {};
-	var flag_locations = [[-1, "null", []]];
-	var string_array = string.split(' ');
-	for (var i = 0; i < string_array.length; i++){
-		if (flags_array.indexOf(string_array[i]) > -1){
-			flag_locations.push([i, string_array[i], []]);
-		}else{
-			flag_locations[flag_locations.length - 1][2].push(string_array[i]);
-		}
-	}
-	for (var i = 0; i < flag_locations.length; i++){
-		return_object[flag_locations[i][1].replace(/^(-*)/g, '')] = {};
-		return_object[flag_locations[i][1].replace(/^(-*)/g, '')].flagLocation = flag_locations[i][0];
-		return_object[flag_locations[i][1].replace(/^(-*)/g, '')].value = flag_locations[i][2].join(' ');
-	}
-	return return_object;
 }
 
 function getIP(link){
