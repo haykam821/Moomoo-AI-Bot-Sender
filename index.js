@@ -22,7 +22,7 @@ yargs
 		type: "string"
 	}
   })
-  .command("send", "Send bots to a Moomoo.io server", {
+  .command("send", "Send bots to a Moomoo.io server.", {
 	"link": {
 		alias: ["party", "partyLink", "server", "serverLink", "serverAddress", "ip"],
 		description: "The party link or IP that the bots should connect with/to.",
