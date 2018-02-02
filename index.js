@@ -74,8 +74,23 @@ const args = yargs
 		default: true
 	},
   })
+	.options({
+		"probeName": {
+			hidden: true
+		},
+		"probeTribe": {
+			hidden: true
+		}
+	})
   .help()
   .argv;
+
+if (args.probeName || args.probeTribe) {
+	console.log("--probeName and --probeTribe arguments have been removed.");
+	console.log("Use the 'probe' subcommand and --name/--tribe arguments instead.");
+
+	process.exit();
+}
 
 if (!fs.existsSync(`${__dirname}/lastUpdated.txt`) || Date.now() - parseInt(fs.readFileSync(`${__dirname}/lastUpdated.txt`, "utf8")) > 43200000){
   spawn("node", [`${__dirname}/autoupdate.js`], {
