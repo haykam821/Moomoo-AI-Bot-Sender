@@ -73,6 +73,10 @@ const args = yargs
 		type: "boolean",
 		default: true
 	},
+	"ownerID": {
+		alias: ["owner"],
+		description: "Sets the ID of the owner."
+	}
   })
 	.options({
 		"probeName": {
