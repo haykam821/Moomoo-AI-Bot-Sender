@@ -1427,13 +1427,16 @@ typeof name === "string" && (name = name.slice(0, 16));
 tribe && (tribe = tribe.slice(0, 6));
 chat && (chat = chat.slice(0, 30));
 
+let tribeName = args.tribe.slice(0, 6); // tribe name has a 6-character limit
+let chatMsg = args.chat.slice(0, 30); // chat message has a 30-character limit
+
 if (probe){
   console.log(`Initiating probe for${probeTribe ? ` tribe ${probeTribe}` : ""}${probeName ? ` player ${probeName}` : ""}.`);
   (function connectBots(i){
     if (i <= 0) return;
     var promises = [];
     for (var j = i; (j > i - 8) && (j > 0); j--){
-      promises.push(new Bot(j, allServers[j - 1].ip, "PROBE", tribe, chat, ai, probe, autoHeal, randSkins).connect())
+      promises.push(new Bot(j, allServers[j - 1].ip, "PROBE", tribeName, chatMsg, args.ai, args.probe, args.autoHeal, args.randSkins).connect())
     }
     Promise.all(promises).then(() => {
       connectBots(i - 8);
@@ -1444,7 +1447,7 @@ if (probe){
     if (i <= 0) return;
     var promises = [];
     for (var j = i; (j > i - 8) && (j > 0); j--){
-      promises.push(new Bot(j, link, name === true ? names[(Math.random() * names.length) | 0] : name, tribe, chat, ai, probe, autoHeal, randSkins).connect())
+      promises.push(new Bot(j, args.link, args.randNames === true ? names[(Math.random() * names.length) | 0] : args.username, tribeName, chatMsg, args.ai, args.probe, args.autoHeal, args.randSkins).connect())
     }
     Promise.all(promises).then(() => {
       connectBots(i - 8);
