@@ -1416,15 +1416,12 @@ var probeTribe = args.probeTribe && args.probeTribe.value;
 var probeName = args.probeName && args.probeName.value;
 var probe = probeTribe || probeName;
 
-typeof name === "string" && (name = name.slice(0, 16));
-tribe && (tribe = tribe.slice(0, 6));
-chat && (chat = chat.slice(0, 30));
-
+let botName = args.username.slice(0, 16); // username has a 16-character limit
 let tribeName = args.tribe.slice(0, 6); // tribe name has a 6-character limit
 let chatMsg = args.chat.slice(0, 30); // chat message has a 30-character limit
 
-if (probe){
-  console.log(`Initiating probe for${probeTribe ? ` tribe ${probeTribe}` : ""}${probeName ? ` player ${probeName}` : ""}.`);
+if (probe && (args.tribe || args.name)) {
+  console.log(`Initiating probe for${args.tribe ? ` tribe ${args.tribe}` : ""}${args.name ? ` player ${args.name}` : ""}.`);
   (function connectBots(i){
     if (i <= 0) return;
     var promises = [];
