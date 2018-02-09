@@ -42,17 +42,18 @@ const args = yargs
 		default: ""
 	},
 	"tribe": {
-		alias: "t",
+		alias: ["t"],
 		description: "The tribe to join.",
 		type: "string"
 	},
 	"randNames": {
+		alias: ["randomNames"],
 		description: "Whether to use a random (human) name for each bot.",
 		type: "boolean",
 		default: false
 	},
 	"chatMessage": {
-		alias: ["chat", "message", "text"],
+		alias: ["chat", "message", "text", "textMessage"],
 		description: "The message that the bots will constantly send.",
 		type: "string"
 	},
@@ -63,7 +64,7 @@ const args = yargs
 		default: false
 	},
 	"autoHeal": {
-		alias: ["heal", "healing"],
+		alias: ["heal", "healing", "autoHealing"],
 		description: "Enables bots trying to heal if they are damaged.",
 		type: "boolean",
 		default: true
