@@ -1412,17 +1412,10 @@ class Bot {
   }
 }
 
-var numBots = (args.num && parseInt(args.num.value)) || 0;
-var link = (args.link && getIP(args.link.value)) || null;
-var name = (args.randNames && args.randNames.value.toLowerCase() != "false" && args.randNames.value != 0) ? true : ((args.name && args.name.value) || "unknown");
-var tribe = (args.tribe && args.tribe.value) || null;
-var chat = (args.chat && args.chat.value) || null;
-var ai = args.ai && args.ai.value.toLowerCase() != "false" && args.ai.value.toLowerCase() != "0";
 var probeTribe = args.probeTribe && args.probeTribe.value;
 var probeName = args.probeName && args.probeName.value;
 var probe = probeTribe || probeName;
-var autoHeal = !args.autoHeal || (args.autoHeal.value.toLowerCase() != "false" && args.autoHeal.value.toLowerCase() != "0");
-var randSkins = args.randSkins && args.randSkins.value.toLowerCase() != "false" && args.randSkins.value.toLowerCase() != "0";
+
 typeof name === "string" && (name = name.slice(0, 16));
 tribe && (tribe = tribe.slice(0, 6));
 chat && (chat = chat.slice(0, 30));
