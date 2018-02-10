@@ -2,6 +2,10 @@
 
 This script is a very configurable botting tool for the MMO game [Moomoo.io](http://moomoo.io).
 
+### WARNING: Please do not download any code that claims that it will "fix" or "add features" to this bot code. People have been including trojans and viruses in those unofficial programs. The ONLY official Moomoo bot code authors are Mega-Mewthree and Nebula-Devs. DO NOT download any other code related to Moomoo bots.
+
+We are not responsible for any damages caused by this project, or derivatives of this project. Use at your own risk.
+
 ## Resources
 
 * [Discord Server](https://discord.gg/Uj3GWPy)
@@ -29,9 +33,8 @@ Download and install Python 2.7.x [here](https://www.python.org/downloads/releas
 
 Run the following commands in your console (Command Prompt/Powershell):
 
-  `npm config set python python2.7`
-  
-  `npm config set msvs_version 2015`
+    npm config set python python2.7
+    npm config set msvs_version 2015
   
 #### Mac OS X
 
@@ -49,7 +52,7 @@ Download and install GCC [here](https://gcc.gnu.org/).
 
 Run the following command in your console/terminal inside of the bot code's directory:
 
-  `npm install robotjs`
+    npm install robotjs
 
 ### Install the Bot Code (Required)
 
@@ -72,7 +75,7 @@ Microsoft Edge: [Tampermonkey](https://www.microsoft.com/store/p/tampermonkey/9n
 Opera: [Tampermonkey](https://addons.opera.com/extensions/details/tampermonkey-beta/)
 
 
-Put the code in showid.js into Tampermonkey so that your ID is visible.
+Put the code in showid.user.js into Tampermonkey so that your ID is visible.
 
 
 Here is the start script:
