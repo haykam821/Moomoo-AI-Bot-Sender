@@ -42,17 +42,18 @@ const args = yargs
 		default: ""
 	},
 	"tribe": {
-		alias: "t",
+		alias: ["t"],
 		description: "The tribe to join.",
 		type: "string"
 	},
 	"randNames": {
+		alias: ["randomNames"],
 		description: "Whether to use a random (human) name for each bot.",
 		type: "boolean",
 		default: false
 	},
 	"chatMessage": {
-		alias: ["chat", "message", "text"],
+		alias: ["chat", "message", "text", "textMessage"],
 		description: "The message that the bots will constantly send.",
 		type: "string"
 	},
@@ -63,7 +64,7 @@ const args = yargs
 		default: false
 	},
 	"autoHeal": {
-		alias: ["heal", "healing"],
+		alias: ["heal", "healing", "autoHealing"],
 		description: "Enables bots trying to heal if they are damaged.",
 		type: "boolean",
 		default: true
@@ -1415,28 +1416,21 @@ class Bot {
   }
 }
 
-var numBots = (args.num && parseInt(args.num.value)) || 0;
-var link = (args.link && getIP(args.link.value)) || null;
-var name = (args.randNames && args.randNames.value.toLowerCase() != "false" && args.randNames.value != 0) ? true : ((args.name && args.name.value) || "unknown");
-var tribe = (args.tribe && args.tribe.value) || null;
-var chat = (args.chat && args.chat.value) || null;
-var ai = args.ai && args.ai.value.toLowerCase() != "false" && args.ai.value.toLowerCase() != "0";
 var probeTribe = args.probeTribe && args.probeTribe.value;
 var probeName = args.probeName && args.probeName.value;
 var probe = probeTribe || probeName;
-var autoHeal = !args.autoHeal || (args.autoHeal.value.toLowerCase() != "false" && args.autoHeal.value.toLowerCase() != "0");
-var randSkins = args.randSkins && args.randSkins.value.toLowerCase() != "false" && args.randSkins.value.toLowerCase() != "0";
-typeof name === "string" && (name = name.slice(0, 16));
-tribe && (tribe = tribe.slice(0, 6));
-chat && (chat = chat.slice(0, 30));
 
-if (probe){
-  console.log(`Initiating probe for${probeTribe ? ` tribe ${probeTribe}` : ""}${probeName ? ` player ${probeName}` : ""}.`);
+let botName = args.username.slice(0, 16); // username has a 16-character limit
+let tribeName = args.tribe.slice(0, 6); // tribe name has a 6-character limit
+let chatMsg = args.chat.slice(0, 30); // chat message has a 30-character limit
+
+if (probe && (args.tribe || args.name)) {
+  console.log(`Initiating probe for${args.tribe ? ` tribe ${args.tribe}` : ""}${args.name ? ` player ${args.name}` : ""}.`);
   (function connectBots(i){
     if (i <= 0) return;
     var promises = [];
     for (var j = i; (j > i - 8) && (j > 0); j--){
-      promises.push(new Bot(j, allServers[j - 1].ip, "PROBE", tribe, chat, ai, probe, autoHeal, randSkins).connect())
+      promises.push(new Bot(j, allServers[j - 1].ip, "PROBE", tribeName, chatMsg, args.ai, args.probe, args.autoHeal, args.randSkins).connect())
     }
     Promise.all(promises).then(() => {
       connectBots(i - 8);
@@ -1447,7 +1441,7 @@ if (probe){
     if (i <= 0) return;
     var promises = [];
     for (var j = i; (j > i - 8) && (j > 0); j--){
-      promises.push(new Bot(j, link, name === true ? names[(Math.random() * names.length) | 0] : name, tribe, chat, ai, probe, autoHeal, randSkins).connect())
+      promises.push(new Bot(j, args.link, args.randNames === true ? names[(Math.random() * names.length) | 0] : args.username, tribeName, chatMsg, args.ai, args.probe, args.autoHeal, args.randSkins).connect())
     }
     Promise.all(promises).then(() => {
       connectBots(i - 8);
