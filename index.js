@@ -73,7 +73,18 @@ const args = yargs
 		description: "Whether to randomize the skin color of each bot.",
 		type: "boolean",
 		default: true
-	},
+  },
+  "hat": {
+    alias: ["hatID", "hatName", "hatCode"],
+    description: "The hat to buy and equip on each bot when it is possible.",
+    type: "string"
+  },
+  "autoAttack": {
+    alias: ["attack", "swing", "autoSwing"],
+    description: "Whether to enable auto attacking (similar to pressing E)",
+    type: "boolean",
+    default: true
+  },
 	"ownerID": {
 		alias: ["owner"],
 		description: "Sets the ID of the owner."
@@ -108,10 +119,10 @@ if (!fs.existsSync(`${__dirname}/lastUpdated.txt`) || Date.now() - parseInt(fs.r
 var computer = null;
 
 try {
-	require.resolve("robotjs");
-	computer = require("robotjs");
+  require.resolve("robotjs");
+  computer = require("robotjs");
 }catch(e){
-	console.error("Robot.js was not installed correctly. Follow mouse function is disabled.");
+  console.error("Robot.js was not installed correctly. Follow mouse function is disabled.");
 }
 
 const screen = computer && computer.getScreenSize();
@@ -121,6 +132,14 @@ const httpServer = http.createServer((req, res) => {
   if (args.ownerID){
     ownerID = args.ownerID;
     console.log(`Set owner ID to ${args.ownerID}`);
+  }
+  if (args.spawned && followMouse){
+    goto.x = goto.y = null;
+    stay = false;
+    followID = null;
+    attackFollowedPlayer = false;
+    followMouse = false;
+    console.log(`Stopped following mouse due to owner spawn`);
   }
   res.writeHead(204);
   res.end();
@@ -142,9 +161,9 @@ var mousePos = {x: 0, y: 0};
 var followMouse = false;
 var getMouseInputInterval = null;
 if (computer){
-	getMouseInputInterval = setInterval(() => {
-  	mousePos = computer.getMousePos();
-	}, 200);
+  getMouseInputInterval = setInterval(() => {
+    mousePos = computer.getMousePos();
+  }, 200);
 }
 
 function get(url){
@@ -177,6 +196,23 @@ function processInput(line){
     ownerID = a[0];
   }
 }
+
+function getHatID(name){
+  const maybeAnInt = parseInt(name);
+  if (!isNaN(maybeAnInt)){
+    return maybeAnInt;
+  }else{
+    if (!name || !name.toString) return null;
+    let safeName = name.toString().toLowerCase();
+    safeName = safeName.replace(/[$-/:-?{-~!"^_`\[\]]/g, ""); // remove symbols
+    safeName = safeName.replace(/\s/g, ""); // remove whitespace
+    safeName = data.hatAliases[safeName];
+    if (!isNaN(safeName)) return safeName;
+    return null;
+  }
+}
+
+const data = require("./data.json");
 
 const names = [
   "Wally",
@@ -1077,7 +1113,7 @@ let tribes = {};
 let players = {};
 
 class Bot {
-  constructor(n, ip, name, tribe, chatMsg, ai, probe, autoHeal, randSkins){
+  constructor(n, ip, name, tribe, chatMsg, ai, probe, autoHeal, randSkins, hatID, autoAttack) {
     this.number = n;
     this.ip = ip;
     this.name = name || "unknown";
@@ -1088,20 +1124,29 @@ class Bot {
     this.probe = probe;
     this.autoHeal = autoHeal;
     this.randSkins = randSkins;
+    this.hatID = hatID;
+    this.autoAttack = autoAttack;
+    this.lastRandAngleUpdate = 0;
     this.pos = {
       x: 0,
       y: 0
     };
-		this.chatInterval = undefined;
-		this.reqint = undefined;
+    this.materials = {
+      "wood": 0,
+      "stone": 0,
+      "food": 0,
+      "points": 0
+    };
+    this.chatInterval = undefined;
+    this.reqint = undefined;
     this.updateInterval = undefined;
     this.key = null;
     this.id = null;
   }
   async connect(){
-	//try {
-	//	this.key = /(\\x26\\x6b\\x3d)([a-zA-Z0-9]+)\'}\)\;\}/.exec(await get(`http://${this.ip}:3000/bundle.js`))[2];
-	//}catch(e){}
+    //try {
+    //	this.key = /(\\x26\\x6b\\x3d)([a-zA-Z0-9]+)\'}\)\;\}/.exec(await get(`http://${this.ip}:3000/bundle.js`))[2];
+    //}catch(e){}
     var sk = this.socket = io.connect(`http://${this.ip}:${5000 + (this.number % 11)}`, {
       reconnection: false,
       query: `man=1`, // &k=${this.key || "none"}
@@ -1118,19 +1163,19 @@ class Bot {
       sk.once("disconnect", () => {
         bots.splice(bots.indexOf(this), 1);
         this.socket.removeAllListeners();
-  			this.socket = null;
+        this.socket = null;
         if (bots.length === 0){
           console.log("Probe finished.");
           process.exit();
         }
-  		});
+      });
       sk.once("connect", () => {
         bots.push(this);
         this.spawn();
-  		});
+      });
       // Spawn (id)
       sk.on("1", r => {
-  			this.id = r;
+        this.id = r;
         setTimeout(this.socket.disconnect.bind(this.socket), 5000);
       });
       // Leaderboard
@@ -1154,25 +1199,25 @@ class Bot {
       sk.once("disconnect", () => {
         bots.splice(bots.indexOf(this), 1);
         console.log(`${this.number} disconnected`);
-  			clearInterval(this.chatInterval);
+        clearInterval(this.chatInterval);
         clearInterval(this.reqint);
         clearInterval(this.updateInterval);
-  			setTimeout(this.connect.bind(this), 2000);
+        setTimeout(this.connect.bind(this), 2000);
         this.socket.removeAllListeners();
-  			this.socket = null;
-  		});
-  		sk.once("connect", () => {
+        this.socket = null;
+      });
+      sk.once("connect", () => {
         console.log(`${this.number} connected`);
         bots.push(this);
         this.spawn();
-  		});
+      });
       // Spawn (id)
       sk.on("1", r => {
         console.log(`${this.number} spawned`);
-  			this.id = r;
-  			this.tribe && sk.emit("8", this.tribe);
+        this.id = r;
+        this.tribe && sk.emit("8", this.tribe);
         if (this.chatMsg) this.chatInterval = setInterval(this.chat.bind(this), 3000);
-  			this.tribe && (this.reqint = setInterval(this.join.bind(this), 5000));
+        this.tribe && (this.reqint = setInterval(this.join.bind(this), 5000));
         if (this.ai) this.updateInterval = setInterval(this.update.bind(this), 1000);
       });
       // Player Add ([l_id, id, name, x, y, angle, ?, ?, ?, ?], main)
@@ -1228,13 +1273,18 @@ class Bot {
           }
         }
       });
+      // Resource obtained
+      sk.on("9", (type, amount) => {
+        this.materials[type] = amount;
+        this.tryHatOn(this.hatID);
+      });
       // Damaged
       if (this.autoHeal){
-	sk.on("10", (id, health) => {
-		if (id == this.id && health < 100) {
-			setTimeout(this.heal.bind(this), 75 + (Math.random() / 10) | 0);
-		}
-	});
+        sk.on("10", (id, health) => {
+          if (id == this.id && health < 100) {
+            setTimeout(this.heal.bind(this), 75 + (Math.random() / 10) | 0);
+          }
+        });
       }
       // Death
       sk.on("11", () => {
@@ -1242,8 +1292,8 @@ class Bot {
         clearInterval(this.chatInterval);
         clearInterval(this.reqint);
         clearInterval(this.updateInterval);
-  			setTimeout(this.spawn.bind(this), 20);
-  		});
+        setTimeout(this.spawn.bind(this), 20);
+      });
       // Tribe Delete (name)
       sk.on("ad", (name) => {
         if (this === bots[0]){
@@ -1286,6 +1336,7 @@ class Bot {
             this.chatMsg = "Player not in memory.";
           }
           clearInterval(this.chatInterval);
+          this.chatInterval = null;
           setTimeout(this.chat.bind(this), 1000);
         }else if (command === "fid"){
           goto.x = goto.y = null;
@@ -1317,6 +1368,37 @@ class Bot {
           followID = null;
           attackFollowedPlayer = false;
           followMouse = true;
+        }else if (command === "hat" && args[0]){
+          let hatToEquip = args[0];
+          let len = bots.length;
+          let bot, triedHat;
+          while (len--){
+            bot = bots[len];
+            triedHat = bot.tryHatOn(hatToEquip);
+            if (triedHat){
+              bot.chatMsg = "Switched hat.";
+            }else if (triedHat === false){
+              bot.chatMsg = `Need ${data.hatPrices[getHatID(hatToEquip)] - bot.materials.points} more gold.`;
+            }else{
+              bot.chatMsg = `Invalid hat!`
+            }
+            clearInterval(bot.chatInterval);
+            bot.chatInterval = null;
+            setTimeout(bot.chat.bind(bot), 1000);
+          }
+        }else if (command === "atk"){
+          this.autoAttack = !this.autoAttack;
+          this.socket && this.socket.emit("7", this.autoAttack);
+        }else if (command === "sp"){
+          this.socket.emit("5", 5, null);
+          this.socket.emit("4", 1, null);
+          this.socket.emit("4", 0, null);
+          this.socket.emit("5", 1, null);
+        }else if (command === "w"){
+          this.socket.emit("5", 2, null);
+          this.socket.emit("4", 1, null);
+          this.socket.emit("4", 0, null);
+          this.socket.emit("5", 1, null);
         }
       });
       // ID (tribes[name, owner])
@@ -1342,6 +1424,7 @@ class Bot {
           tribes[name] = {owner: owner, players: []};
         }
       });
+      // Minimap Ping (x, y)
       sk.on("p", (x, y) => {
         goto.x = x;
         goto.y = y;
@@ -1350,11 +1433,16 @@ class Bot {
     }
   }
   disconnect(){
-		this.socket.disconnect();
+    this.socket.disconnect();
   }
   spawn(){
-    this.socket && this.socket.emit("1", {name: this.name, moofoll: true, skin: this.randSkins ? Math.round(Math.random() * 5) : 0});
-		this.socket && this.socket.emit("7", 1);
+    this.socket && this.socket.emit("1", {
+      name: this.name,
+      moofoll: true,
+      skin: this.randSkins ? Math.round(Math.random() * 5) : 0
+    });
+    this.socket && this.socket.emit("7", this.autoAttack);
+    this.tryHatOn(this.hatID);
   }
   join(){
     this.socket && this.tribe && this.socket.emit("10", this.tribe);
@@ -1363,6 +1451,21 @@ class Bot {
     this.socket.emit("5", 0, null);
     this.socket.emit("4", 1, null);
     this.socket.emit("5", 0, true);
+  }
+  tryHatOn(id){
+    id = getHatID(id);
+    if (isNaN(id)) return null;
+    if (!isNaN(data.hatPrices[id])){
+      this.hatID = id;
+      if (this.materials.points >= data.hatPrices[id]){
+        this.socket.emit("13", 1, id);
+        this.socket.emit("13", 0, id);
+        return true;
+      }else{
+        this.socket.emit("13", 0, id);
+        return false;
+      }
+    }
   }
   chat(){
     this.socket.emit("ch", this.chatMsg);
@@ -1391,16 +1494,27 @@ class Bot {
     }else if (followID && players[followID]){
       const p = players[followID];
       if (p && p.x){
-        if (!attackFollowedPlayer){
-          if (Math.pow(this.pos.x - p.x, 2) + Math.pow(this.pos.y - p.y, 2) < 20000){
-            this.socket.emit(2, p.angle);
-            this.socket.emit(3, null);
+        const now = Date.now();
+        if (now - p.lastUpdated > 30000 && now - this.lastRandAngleUpdate > 20000){
+          this.lastRandAngleUpdate = now;
+          const randAngle = Math.random() * Math.PI * 2;
+          this.socket.emit(2, randAngle);
+          this.socket.emit(3, randAngle);
+        }else{
+          if (!attackFollowedPlayer){
+            if (Math.pow(this.pos.x - p.x, 2) + Math.pow(this.pos.y - p.y, 2) < 20000){
+              this.socket.emit(2, p.angle);
+              this.socket.emit(3, null);
+            }else{
+              this.socket.emit(2, Math.atan2(p.y - this.pos.y, p.x - this.pos.x));
+              this.socket.emit(3, Math.atan2(p.y - this.pos.y, p.x - this.pos.x));
+            }
           }else{
             this.socket.emit(2, Math.atan2(p.y - this.pos.y, p.x - this.pos.x));
             this.socket.emit(3, Math.atan2(p.y - this.pos.y, p.x - this.pos.x));
           }
         }
-      }
+        }
     }else if (goto.x && goto.y){
       if (Math.pow(this.pos.x - goto.x, 2) + Math.pow(this.pos.y - goto.y, 2) < 40000){
         this.socket.emit(2, 0);
@@ -1430,7 +1544,7 @@ if (probe && (args.tribe || args.name)) {
     if (i <= 0) return;
     var promises = [];
     for (var j = i; (j > i - 8) && (j > 0); j--){
-      promises.push(new Bot(j, allServers[j - 1].ip, "PROBE", tribeName, chatMsg, args.ai, args.probe, args.autoHeal, args.randSkins).connect())
+      promises.push(new Bot(j, allServers[j - 1].ip, "PROBE", tribeName, chatMsg, args.ai, args.probe, args.autoHeal, args.randSkins, args.hatID, args.autoAttack).connect())
     }
     Promise.all(promises).then(() => {
       connectBots(i - 8);
@@ -1441,7 +1555,7 @@ if (probe && (args.tribe || args.name)) {
     if (i <= 0) return;
     var promises = [];
     for (var j = i; (j > i - 8) && (j > 0); j--){
-      promises.push(new Bot(j, args.link, args.randNames === true ? names[(Math.random() * names.length) | 0] : args.username, tribeName, chatMsg, args.ai, args.probe, args.autoHeal, args.randSkins).connect())
+      promises.push(new Bot(j, args.link, args.randNames === true ? names[(Math.random() * names.length) | 0] : args.username, tribeName, chatMsg, args.ai, args.probe, args.autoHeal, args.randSkins, args.hatID, args.autoAttack).connect())
     }
     Promise.all(promises).then(() => {
       connectBots(i - 8);
