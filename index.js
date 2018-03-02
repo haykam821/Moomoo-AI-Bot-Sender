@@ -24,7 +24,55 @@ try {
 
 const screen = computer && computer.getScreenSize();
 
-var args = parseFlags(process.argv.slice(2).join(" "), ["--num", "--link", "--tribe", "--name", "--randNames", "--randSkins", "--chat", "--ai", "--probeTribe", "--probeName", "--autoHeal", "--hat", "--autoAttack"]);
+var args = parseFlags(process.argv.slice(2).join(" "), [
+  "--num",
+  "--link",
+  "--tribe",
+  "--name",
+  "--randNames",
+  "--randSkins",
+  "--chat",
+  "--ai",
+  "--probeTribe",
+  "--probeName",
+  "--autoHeal",
+  "--hat",
+  "--autoAttack",
+  "--protocol"
+]);
+
+const protocols = {
+  "moomoo": {
+    name: "Moomoo.io",
+    usesArrayBuffer: true,
+    serverBoundPackets: {
+      "CHAT_MESSAGE_SEND": "ch"
+    },
+    clientBoundPackets: {
+      "CHAT_MESSAGE_RECIEVE": "ch"
+    }
+  },
+  "takemine": {
+    name: "Takemine.io",
+    usesArrayBuffer: false,
+    serverBoundPackets: {
+      "SPAWN_PLAYER": "1",
+      "TRIBE_CREATE": "8",
+      "TRIBE_JOIN": "8",
+      "TRIBE_LEAVE": "8",
+      "CHAT_MESSAGE_SEND": "4",
+      "DO_PLAYER_ACTION": "3",
+      "SWITCH_TOOL": "5"
+    },
+    clientBoundPackets: {
+      "LEADERBOARD_UPDATE": "5",
+      "CHAT_MESSAGE_RECIEVE": "9"
+    }
+  }
+}
+
+const protocolValue = (args.protocol && args.protocol.value) || "moomoo";
+const protocol = protocols[protocolValue];
 
 const httpServer = http.createServer((req, res) => {
   const args = url.parse(req.url, true).query;
@@ -1068,14 +1116,14 @@ class Bot {
     //try {
     //	this.key = /(\\x26\\x6b\\x3d)([a-zA-Z0-9]+)\'}\)\;\}/.exec(await get(`http://${this.ip}:3000/bundle.js`))[2];
     //}catch(e){}
-    var sk = this.socket = io.connect(`http://${this.ip}:${5000 + (this.number % 11)}`, {
+    var sk = this.socket = io.connect(`http://144.217.11.212:3009`, {
       reconnection: false,
       query: `man=1`, // &k=${this.key || "none"}
       transportOptions: {
         polling: {
           extraHeaders: {
-            "Origin": "http://moomoo.io",
-            "Referer": "http://moomoo.io"
+            "Origin": "http://takemine.io",
+            "Referer": "http://takemine.io"
           }
         }
       }
@@ -1092,15 +1140,17 @@ class Bot {
       });
       sk.once("connect", () => {
         bots.push(this);
+        console.log("hi")
         this.spawn();
       });
+      sk.on("1", d=>console.log(d))
       // Spawn (id)
       sk.on("1", r => {
         this.id = r;
         setTimeout(this.socket.disconnect.bind(this.socket), 5000);
       });
       // Leaderboard
-      sk.on("5", data => {
+      sk.on(protocol.clientBoundPackets.LEADERBOARD_UPDATE, data => {
         if (probeName && data.indexOf(probeName) > -1){
           console.log(`${this.ip}`);
           sk.disconnect();
@@ -1235,7 +1285,7 @@ class Bot {
         }
       });
       // Chat (id, name)
-      sk.on("ch", (id, msg) => {
+      sk.on(protocol.clientBoundPackets.CHAT_MESSAGE_RECIEVE, (id, msg) => {
         if (id != ownerID) return;
         if (!msg.startsWith("!")) return;
         const args = msg.slice(1).trim().split(/ +/g);
@@ -1309,7 +1359,7 @@ class Bot {
           }
         }else if (command === "atk"){
           this.autoAttack = !this.autoAttack;
-          this.socket && this.socket.emit("7", this.autoAttack);
+          this.autoAttackToggle();
         }else if (command === "sp"){
           this.socket.emit("5", 5, null);
           this.socket.emit("4", 1, null);
@@ -1357,16 +1407,33 @@ class Bot {
     this.socket.disconnect();
   }
   spawn(){
-    this.socket && this.socket.emit("1", {
-      name: this.name,
-      moofoll: true,
-      skin: this.randSkins ? Math.round(Math.random() * 5) : 0
-    });
-    this.socket && this.socket.emit("7", this.autoAttack);
+    let spawnData;
+    if (protocolValue === "takemine") {
+      spawnData = [
+        this.name,
+        this.randSkins ? Math.round(Math.random() * 4) + 1 : 1
+      ];
+    } else {
+      spawnData = {
+        name: this.name,
+        moofoll: true,
+        skin: this.randSkins ? Math.round(Math.random() * 5) : 0
+      };
+    }
+    console.log(spawnData)
+    this.socket && this.socket.emit(protocol.serverBoundPackets.SPAWN_PLAYER, spawnData);
+    this.autoAttackToggle();
     this.tryHatOn(this.hatID);
   }
   join(){
-    this.socket && this.tribe && this.socket.emit("10", this.tribe);
+    this.socket && this.tribe && this.socket.emit(protocol.serverBoundPackets.TRIBE_JOIN, this.tribe);
+  }
+  autoAttackToggle(){
+    if (protocolValue === "takemine") {
+      this.socket && this.socket.emit(protocol.serverBoundPackets.DO_PLAYER_ACTION, 69);
+    } else {
+      this.socket && this.socket.emit("7", this.autoAttack);
+    }
   }
   heal(){
     this.socket.emit("5", 0, null);
@@ -1389,7 +1456,7 @@ class Bot {
     }
   }
   chat(){
-    this.socket.emit("ch", this.chatMsg);
+    this.socket.emit(protocol.serverBoundPackets.CHAT_MESSAGE_SEND, this.chatMsg);
     this.chatMsg = this.origChatMsg;
     if (this.origChatMsg && !this.chatInterval){
       this.chatInterval = setInterval(this.chat.bind(this), 3000);
