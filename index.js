@@ -66,7 +66,8 @@ const protocols = {
     },
     clientBoundPackets: {
       "LEADERBOARD_UPDATE": "5",
-      "CHAT_MESSAGE_RECIEVE": "9"
+      "CHAT_MESSAGE_RECIEVE": "9",
+      "PLAYER_UPDATE": "3",
     }
   }
 }
@@ -1361,15 +1362,15 @@ class Bot {
           this.autoAttack = !this.autoAttack;
           this.autoAttackToggle();
         }else if (command === "sp"){
-          this.socket.emit("5", 5, null);
+          this.socket.emit(protocol.serverBoundPackets.CHANGE_TOOL, 5, null);
           this.socket.emit("4", 1, null);
           this.socket.emit("4", 0, null);
-          this.socket.emit("5", 1, null);
+          this.socket.emit(protocol.serverBoundPackets.CHANGE_TOOL, 1, null);
         }else if (command === "w"){
-          this.socket.emit("5", 2, null);
+          this.socket.emit(protocol.serverBoundPackets.CHANGE_TOOL, 2, null);
           this.socket.emit("4", 1, null);
           this.socket.emit("4", 0, null);
-          this.socket.emit("5", 1, null);
+          this.socket.emit(protocol.serverBoundPackets.CHANGE_TOOL, 1, null);
         }
       });
       // ID (tribes[name, owner])
@@ -1436,9 +1437,9 @@ class Bot {
     }
   }
   heal(){
-    this.socket.emit("5", 0, null);
+    this.socket.emit(protocol.serverBoundPackets.CHANGE_TOOL, 0, null);
     this.socket.emit("4", 1, null);
-    this.socket.emit("5", 0, true);
+    this.socket.emit(protocol.serverBoundPackets.CHANGE_TOOL, 0, true);
   }
   tryHatOn(id){
     id = getHatID(id);
