@@ -1,3 +1,21 @@
+April 22, 2018 (1.9.0):
+  + JOIN NEBULA AT https://join-nebula.surge.sh (Discord)
+  + Added regex probing
+    * See the documentation for details
+  + Fixed some errors when sending large numbers of bots
+
+April 14, 2018 (1.8.1):
+  + Added dev servers
+
+March 29, 2018 (1.8.0):
+  + Updated Moomoo Bot Utilities to work with the new encoding scheme
+  + UPDATE YOUR TAMPERMONKEY SCRIPT!!!
+
+February 23, 2018 (1.7.0):
+  + Updated code to use ArrayBuffers
+  + The first time you run this, "npm install" will be automatically run
+  + "npm install" will be run automatically after any future updates
+
 February 19, 2018 (1.6.1):
   + Fixed a typo that crashes the program whenever a tribe is deleted
 
