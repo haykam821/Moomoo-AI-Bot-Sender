@@ -170,4 +170,4 @@ Press R or click on the minimap to make a ping on the minimap, which makes the b
 
 !hat \<hat ID>: Switches a bot's hat using the ID, name, or keyword. If necessary, the requested hat will be bot.
 
-!atk: Toggles auto attack, as if the bots pressed E.
+!atk \<boolean>: Enables or disables auto attack, or if not provided, toggles it as if the bots pressed E.
