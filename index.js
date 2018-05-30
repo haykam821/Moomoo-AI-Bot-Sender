@@ -1401,7 +1401,23 @@ class Bot {
 						setTimeout(bot.chat.bind(bot), 1000);
 					}
 				}else if (command === "atk") {
-					this.autoAttack = !this.autoAttack;
+					switch (args[0]) {
+						case "true":
+						case "1":
+						case "on":
+							this.autoAttack = true;
+							this.chatMsg = "Enabled auto-attack.";
+							break;
+						case "false":
+						case "0":
+						case "off":
+							this.autoAttack = false;
+							this.chatMsg = "Disabled auto-attack.";
+							break;
+						default:
+							this.autoAttack = !this.autoAttack;
+							this.chatMsg = "Toggled auto-attack.";
+					}
 					this.socket && this.socket.emit("7", this.autoAttack);
 				}else if (command === "sp") {
 					this.socket.emit("5", 5, null);
