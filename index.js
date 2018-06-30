@@ -304,6 +304,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 				return runCommand(command, cmdArgs, invoker);
 			},
+		}, {
+			name: "perm",
+			run: (cmdArgs, invoker) => {
+				return invoker.reply(`Permission level is ${invoker.permissionLevel}.`);
+			},
 		},
 	];
 
