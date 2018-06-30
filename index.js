@@ -40,7 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		spawn("npm", ["install"], {
 			stdio: "ignore",
 			shell: true,
-			detached: true
+			detached: true,
 		});
 		process.exit();
 	}
@@ -49,7 +49,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		spawn("node", [`${__dirname}/autoupdate.js`], {
 			stdio: "ignore",
 			shell: true,
-			detached: true
+			detached: true,
 		});
 	}
 
@@ -398,7 +398,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	];
 
 	let serverList;
-	let allServers = [];
+	const allServers = [];
 	try {
 		serverList = await get("https://moomoo.io/serverData");
 		serverList = serverList.substring(serverList.indexOf("{")).replace(";", "");
@@ -413,7 +413,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			games = server.games;
 			gameLen = games.length;
 			while (gameLen--) {
-				allServers.push({id: `${server.region}:${server.index}:${gameLen}`, ip: server.ip, gameIndex: gameLen});
+				allServers.push({ id: `${server.region}:${server.index}:${gameLen}`, ip: server.ip, gameIndex: gameLen });
 			}
 		}
 	} catch (e) {
@@ -492,8 +492,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				});
 				// Leaderboard
 				sk.on("5", data => {
-					if (probeName){
-						if ((probeName instanceof RegExp && data.filter(d => typeof d === "string" && d.match(probeName)).length > 0) || (typeof probeName === "string" && data.indexOf(probeName) > -1)){
+					if (probeName) {
+						if ((probeName instanceof RegExp && data.filter(d => typeof d === "string" && d.match(probeName)).length > 0) || (typeof probeName === "string" && data.indexOf(probeName) > -1)) {
 							console.log(`${getServerByIp(this.ip).id}`);
 							sk.disconnect();
 						}
@@ -502,8 +502,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				// ID (tribes[name, owner])
 				sk.on("id", (data) => {
 					data.teams.forEach(t => {
-						if (probeTribe){
-							if ((probeTribe instanceof RegExp && t.sid.match(probeTribe)) || (typeof probeTribe === "string" && t.sid === probeTribe)){
+						if (probeTribe) {
+							if ((probeTribe instanceof RegExp && t.sid.match(probeTribe)) || (typeof probeTribe === "string" && t.sid === probeTribe)) {
 								console.log(`${getServerByIp(this.ip).id}`);
 								sk.disconnect();
 							}
@@ -806,7 +806,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	chat && (chat = chat.slice(0, 30));
 
 	if (probe) {
-		if (probeRegex){
+		if (probeRegex) {
 			console.log(`Initiating probe for${(args.probeTribe && args.probeTribe.value) ? ` tribe ${args.probeTribe.value}` : ""}${(args.probeName && args.probeName.value) ? ` player ${args.probeName.value}` : ""} using regex.`);
 		}else{
 			console.log(`Initiating probe for${probeTribe ? ` tribe ${probeTribe}` : ""}${probeName ? ` player ${probeName}` : ""}.`);
