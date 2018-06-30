@@ -295,6 +295,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				invoker.reciever.socket.emit("4", 0, null);
 				invoker.reciever.socket.emit("5", 1, null);
 			},
+		}, {
+			name: "sudo",
+			minPermission: 5,
+			run: (cmdArgs, invoker) => {
+				const command = cmdArgs.shift().toLowerCase();
+				invoker.permissionLevel = Infinity;
+
+				return runCommand(command, cmdArgs, invoker);
+			},
 		},
 	];
 
@@ -766,7 +775,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	}
 
 	function escapeRegExp(s) {
-		if (s.startsWith("/") && s.endsWith("/")){
+		if (s.startsWith("/") && s.endsWith("/")) {
 			s = s.split("");
 			s = s.slice(1, s.length - 1).join("");
 		}
