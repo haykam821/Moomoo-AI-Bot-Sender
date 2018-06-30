@@ -53,7 +53,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		});
 	}
 
-	let computer = null;
+	const computer = null;
 
 	const screen = computer && computer.getScreenSize();
 
@@ -140,9 +140,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	function processInput(line) {
 		const a = line.split(" ");
 		const command = a.shift();
-		if (command == "setowner") {
-			ownerID = a[0];
-		}
+		return runCommand(command, a, {
+			reply: message => process.stdout.write(message + "\n"),
+			type: "console",
+			// console is the 'sudo' for commands, so give it a permission level letting it run any command
+			permissionLevel: Infinity,
+		});
 	}
 
 	function getHatID(name) {
@@ -157,6 +160,171 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			safeName = data.hatAliases[safeName];
 			if (!isNaN(safeName)) return safeName;
 			return null;
+		}
+	}
+
+	const commands = [
+		{
+			name: "setowner",
+			minPermission: Infinity,
+			run: (cmdArgs, invoker) => {
+				ownerID = cmdArgs[0];
+				invoker.reply("Changed owner.");
+			},
+		}, {
+			name: "id",
+			run: (args2, invoker) => {
+				const a = [];
+				for (const k in players) {
+					if (players[k].name === args2.join(" ")) a.push(k);
+				}
+				if (a.length > 0) {
+					invoker.reply(a.join(", ").slice(0, 30));
+				} else {
+					invoker.reply("Player not in memory.");
+				}
+			},
+		}, {
+			name: "fme",
+			minPermission: 5,
+			run: () => {
+				goto.x = goto.y = null;
+				stay = false;
+				followID = ownerID;
+				attackFollowedPlayer = false;
+				followMouse = false;
+			},
+		}, {
+			name: "fid",
+			minPermission: 5,
+			run: () => {
+				goto.x = goto.y = null;
+				stay = false;
+				followID = parseInt(args[0]);
+				attackFollowedPlayer = false;
+				followMouse = false;
+			},
+		}, {
+			name: "atkid",
+			minPermission: 5,
+			run: cmdArgs => {
+				goto.x = goto.y = null;
+				stay = false;
+				followID = parseInt(cmdArgs[0]);
+				attackFollowedPlayer = true;
+				followMouse = false;
+			},
+		}, {
+			name: "s",
+			minPermission: 5,
+			run: () => {
+				goto.x = goto.y = null;
+				stay = true;
+				followID = null;
+				attackFollowedPlayer = false;
+				followMouse = false;
+			},
+		}, {
+			name: "r",
+			minPermission: 5,
+			run: () => {
+				goto.x = goto.y = null;
+				stay = false;
+				followID = null;
+				attackFollowedPlayer = false;
+				followMouse = false;
+			},
+		}, {
+			name: "fm",
+			minPermission: 5,
+			run: (cmdArgs, invoker) => {
+				if (computer) {
+					goto.x = goto.y = null;
+					stay = false;
+					followID = null;
+					attackFollowedPlayer = false;
+					followMouse = true;
+				} else {
+					invoker.reply("You need Robot.js.");
+				}
+			},
+		}, {
+			name: "hat",
+			minPermission: 5,
+			run: cmdArgs => {
+				const hatToEquip = cmdArgs[0];
+				let len = bots.length;
+				let bot, triedHat;
+				while (len--) {
+					bot = bots[len];
+					triedHat = bot.tryHatOn(hatToEquip);
+					if (triedHat) {
+						bot.chatMsg = "Switched hat.";
+					} else if (triedHat === false) {
+						bot.chatMsg = `Need ${data.hatPrices[getHatID(hatToEquip)] - bot.materials.points} more gold.`;
+					} else {
+						bot.chatMsg = "Invalid hat!";
+					}
+					clearInterval(bot.chatInterval);
+					bot.chatInterval = null;
+					setTimeout(bot.chat.bind(bot), 1000);
+				}
+			},
+		}, {
+			name: "atk",
+			minPermission: 5,
+			run: (cmdArgs, invoker) => {
+				invoker.reciever.autoAttack = !invoker.reciever.autoAttack;
+				invoker.reciever.socket && invoker.reciever.socket.emit("7", invoker.reciever.autoAttack);
+			},
+		}, {
+			name: "sp",
+			minPermission: 5,
+			run: (cmdArgs, invoker) => {
+				invoker.reciever.socket.emit("5", 5, null);
+				invoker.reciever.socket.emit("4", 1, null);
+				invoker.reciever.socket.emit("4", 0, null);
+				invoker.reciever.socket.emit("5", 1, null);
+			},
+		}, {
+			name: "w",
+			minPermission: 5,
+			run: (cmdArgs, invoker) => {
+				invoker.reciever.socket.emit("5", 2, null);
+				invoker.reciever.socket.emit("4", 1, null);
+				invoker.reciever.socket.emit("4", 0, null);
+				invoker.reciever.socket.emit("5", 1, null);
+			},
+		},
+	];
+
+	/**
+	 * Runs a command.
+	 * @param {string} command The command to run.
+	 * @param {string[]} cmdArgs The arguments for the command.
+	 * @param {Object} invoker Details about the invoker of the command.
+	 * @param {string} invoker.type
+	 * @param {function} invoker.reply A function allowing command feedback.
+	 * @param {number} invoker.permissionLevel The permission level of the invoker.
+	 */
+	function runCommand(command, cmdArgs, invoker) {
+		// fix for a weird bug in console input
+		if (command === "") return;
+
+		const matchingCommands = commands.filter(command2 => command2.name === command);
+
+		if (matchingCommands.length === 0) {
+			return invoker.reply("Unknown command.");
+		} else {
+			const cmd = matchingCommands[0];
+
+			if (cmd.senderType !== invoker.type && cmd.senderType !== undefined) {
+				return invoker.reply("Cannot run command here.");
+			} else if (cmd.minPermission > invoker.permissionLevel) {
+				return invoker.reply("Not enough permission.");
+			} else {
+				return cmd.run(cmdArgs, invoker);
+			}
 		}
 	}
 
@@ -449,91 +617,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				});
 				// Chat (id, name)
 				sk.on("ch", (id, msg) => {
-					if (id != ownerID) return;
 					if (!msg.startsWith("!")) return;
-					const args = msg.slice(1).trim().split(/ +/g);
+
+					const cmdArgs = msg.slice(1).trim().split(/ +/g);
 					const command = args.shift().toLowerCase();
-					if (command === "fme") {
-						goto.x = goto.y = null;
-						stay = false;
-						followID = ownerID;
-						attackFollowedPlayer = false;
-						followMouse = false;
-					}else if (command === "id") {
-						const a = [];
-						for (const k in players) {
-							if (players[k].name === args.join(" ")) a.push(k);
-						}
-						if (a.length > 0) {
-							this.chatMsg = a.join(", ").slice(0, 30);
-						}else{
-							this.chatMsg = "Player not in memory.";
-						}
-						clearInterval(this.chatInterval);
-						this.chatInterval = null;
-						setTimeout(this.chat.bind(this), 1000);
-					}else if (command === "fid") {
-						goto.x = goto.y = null;
-						stay = false;
-						followID = parseInt(args[0]);
-						attackFollowedPlayer = false;
-						followMouse = false;
-					}else if (command === "atkid") {
-						goto.x = goto.y = null;
-						stay = false;
-						followID = parseInt(args[0]);
-						attackFollowedPlayer = true;
-						followMouse = false;
-					}else if (command === "s") {
-						goto.x = goto.y = null;
-						stay = true;
-						followID = null;
-						attackFollowedPlayer = false;
-						followMouse = false;
-					}else if (command === "r") {
-						goto.x = goto.y = null;
-						stay = false;
-						followID = null;
-						attackFollowedPlayer = false;
-						followMouse = false;
-					}else if (command === "fm" && computer) {
-						goto.x = goto.y = null;
-						stay = false;
-						followID = null;
-						attackFollowedPlayer = false;
-						followMouse = true;
-					}else if (command === "hat" && args[0]) {
-						const hatToEquip = args[0];
-						let len = bots.length;
-						let bot, triedHat;
-						while (len--) {
-							bot = bots[len];
-							triedHat = bot.tryHatOn(hatToEquip);
-							if (triedHat) {
-								bot.chatMsg = "Switched hat.";
-							}else if (triedHat === false) {
-								bot.chatMsg = `Need ${data.hatPrices[getHatID(hatToEquip)] - bot.materials.points} more gold.`;
-							}else{
-								bot.chatMsg = "Invalid hat!";
-							}
-							clearInterval(bot.chatInterval);
-							bot.chatInterval = null;
-							setTimeout(bot.chat.bind(bot), 1000);
-						}
-					}else if (command === "atk") {
-						this.autoAttack = !this.autoAttack;
-						this.socket && this.socket.emit("7", this.autoAttack);
-					}else if (command === "sp") {
-						this.socket.emit("5", 5, null);
-						this.socket.emit("4", 1, null);
-						this.socket.emit("4", 0, null);
-						this.socket.emit("5", 1, null);
-					}else if (command === "w") {
-						this.socket.emit("5", 2, null);
-						this.socket.emit("4", 1, null);
-						this.socket.emit("4", 0, null);
-						this.socket.emit("5", 1, null);
-					}
+
+					runCommand(command, cmdArgs, {
+						type: "chat",
+						permissionLevel: id === ownerID ? 5 : 0,
+						reply: message => {
+							this.chatMsg = message;
+							clearInterval(this.chatInterval);
+							this.chatInterval = null;
+							setTimeout(this.chat.bind(this), 1000);
+						},
+						reciever: this,
+					});
 				});
 				// ID (tribes[name, owner])
 				sk.on("id", (data) => {
