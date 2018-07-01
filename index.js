@@ -121,6 +121,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		}
 	}
 
+	/**
+	 * Gets a server by its ID.
+	 * @param {string} id The server ID.
+	 */
 	function getServerByID(id) {
 		let len = allServers.length;
 		while (len--) {
@@ -129,6 +133,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		return false;
 	}
 
+	/**
+	 * Gets a server by its IP.
+	 * @param {string} ip The server IP.
+	 */
 	function getServerByIp(ip) {
 		let len = allServers.length;
 		while (len--) {
@@ -148,6 +156,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		});
 	}
 
+	/**
+	 * Gets a hat ID from its alias.
+	 * @param {string} name The hat alias.
+	 */
 	function getHatID(name) {
 		const possiblyInt = parseInt(name);
 		if (!isNaN(possiblyInt)) {
@@ -163,6 +175,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		}
 	}
 
+	/**
+	 * The list of commands.
+	 * @type {Object[]}
+	 */
 	const commands = [
 		{
 			name: "setowner",
