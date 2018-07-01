@@ -146,28 +146,28 @@ This will return all servers where someone whose name has the string `Luc` is on
 
 You can put both the outputs into `--link` for the botting start script.
 
-## Console Commands
+## Commands
 
-Type `setowner <your ID>` into the Node.js console to make the bot obey your ingame commands.
+Most commands can be run in the chat (prefixed with `!`) and console, but some commands are activated through alternate methods.
 
-## Ingame Commands
+### Inputs
 
-Press R or click on the minimap to make a ping on the minimap, which makes the bots come to that pinged location.
+There are two places to input your commands, the console and the chat. Running your commands in the console has no limit as you will never have a permission error, but running commands in chat has multiple drawbacks. Commands in the chat will need to be prefixed with `!` to form something like `!atkid 69`, and you must have the proper permissions to run them. If a command requires owner, then you must run the `setowner` command in the console. The userscript also does this automatically for you. If a command requires sudo, you can use it in the console or as an owner in the chat by prefixing it with `!sudo`.
 
-!id \<player name>: Makes the bots send the ID of a player in chat.
+### Reference
 
-!fme: Makes the bots follow you.
+This table documents all of the commands available to you.
 
-!fid \<player ID>: Makes the bots follow the player with that ID.
-
-!atkid \<player ID>: Makes the bots attack the player with that ID. [BUGGY]
-
-!s: Makes the bots stay.
-
-!r: Releases the bots from control. Different from !s in that pressing R to ping will move them.
-
-!fm: Makes the bots follow your mouse. May be buggy if the robot.js lib didn't compile correctly.
-
-!hat \<hat ID>: Switches a bot's hat using the ID, name, or keyword. If necessary, the requested hat will be bot.
-
-!atk: Toggles auto attack, as if the bots pressed E.
+Command | Description | Requires
+--- | --- | ---
+`setowner <ID>` | Makes the player with that ID the bot owner, allowing them to use all commands that require `Owner`. | Sudo
+`sudo <command> <args...>` | Runs a command with sudo, allowing use of sudo commands outside the console. | Owner
+`id <username>` | Gets the ID of a user from their name. | None
+`fme` | Makes bots follow you. | Owner
+`fid <id>` | Makes the bots follow the player with that ID. | Owner
+`atkid <id>` | Makes the bots attack the player with that ID. [BUGGY] | Owner
+`s` | Makes the bots stay. | Owner
+`r` | Releases the bots from control, but is different from the above command as pressing R to ping will move them. | Owner
+`fm` | Makes the bots follow your mouse. May be buggy if the robot.js library didn't compile correctly. | Owner
+`hat <name>` | Switches a bot's hat using the ID, name, or keyword. If necessary, the requested hat will be bought. | Owner
+`atk` | Toggles auto attack, as if the bots pressed E. | Owner
