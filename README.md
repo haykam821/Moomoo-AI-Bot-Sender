@@ -161,7 +161,6 @@ This table documents all of the commands available to you.
 Command | Description | Requires
 --- | --- | ---
 `setowner <ID>` | Makes the player with that ID the bot owner, allowing them to use all commands that require `Owner`. | Sudo
-`sudo <command> <args...>` | Runs a command with sudo, allowing use of sudo commands outside the console. | Owner
 `id <username>` | Gets the ID of a user from their name. | None
 `fme` | Makes bots follow you. | Owner
 `fid <id>` | Makes the bots follow the player with that ID. | Owner
@@ -171,3 +170,8 @@ Command | Description | Requires
 `fm` | Makes the bots follow your mouse. May be buggy if the robot.js library didn't compile correctly. | Owner
 `hat <name>` | Switches a bot's hat using the ID, name, or keyword. If necessary, the requested hat will be bought. | Owner
 `atk` | Toggles auto attack, as if the bots pressed E. | Owner
+`sp` | Places a spike. | Owner
+`w` | Places a wall. | Owner
+`sudo <command> <args...>` | Runs a command with sudo, allowing use of sudo commands outside the console. | Owner
+`perm` | Gives you your raw permission level. | None
+`redo` | Redoes the last command the bots handled (even if not by you). | None
