@@ -76,6 +76,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		}, 200);
 	}
 
+	/**
+	 * The last command that has been run.
+	 */
+	let prevCommand = {
+		command: "",
+		args: [],
+	};
+
 	function get(url) {
 		return new Promise((resolve, reject) => {
 			request(url, (err, res, body) => {
@@ -326,6 +334,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				return invoker.reply(`Permission level is ${invoker.permissionLevel}.`);
 			},
 		},
+		{
+			name: "redo",
+			run: (cmdArgs, invoker) => runCommand(prevCommand.command, prevCommand.args, invoker),
+		}
 	];
 
 	/**
@@ -353,6 +365,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			} else if (cmd.minPermission > invoker.permissionLevel) {
 				return invoker.reply("Not enough permission.");
 			} else {
+				prevCommand = {
+					command: command,
+					args: cmdArgs,
+				};
+
 				return cmd.run(cmdArgs, invoker);
 			}
 		}
