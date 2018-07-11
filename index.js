@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	const url = require("url");
 	const fs = require("fs");
 	const { spawn } = require("child_process");
+	const moomoo = require("moomoo");
 
 	let parser = null;
 	try {
@@ -40,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		spawn("npm", ["install"], {
 			stdio: "ignore",
 			shell: true,
-			detached: true
+			detached: true,
 		});
 		process.exit();
 	}
@@ -49,11 +50,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		spawn("node", [`${__dirname}/autoupdate.js`], {
 			stdio: "ignore",
 			shell: true,
-			detached: true
+			detached: true,
 		});
 	}
 
-	let computer = null;
+	const computer = null;
 
 	const screen = computer && computer.getScreenSize();
 
@@ -76,20 +77,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		}, 200);
 	}
 
-	function get(url) {
-		return new Promise((resolve, reject) => {
-			request(url, (err, res, body) => {
-				if (err) {
-					reject(err);
-					return;
-				}
-				if (body) {
-					resolve(body);
-				}
-			});
-		});
-	}
-
 	function parseFlags(string, flags_array) {
 		if (!Array.isArray(flags_array)) {
 			return { error: "Array of flags not found." };
@@ -110,31 +97,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			return_object[flag_locations[index][1].replace(/^(-*)/g, "")].value = flag_locations[index][2].join(" ");
 		}
 		return return_object;
-	}
-
-	function getIP(link) {
-		link = link.match(/\d+:\d+:\d+/g);
-		if (link.length > 0) {
-			return link[link.length - 1];
-		} else {
-			return false;
-		}
-	}
-
-	function getServerByID(id) {
-		let len = allServers.length;
-		while (len--) {
-			if (allServers[len].id === id) return allServers[len];
-		}
-		return false;
-	}
-
-	function getServerByIp(ip) {
-		let len = allServers.length;
-		while (len--) {
-			if (allServers[len].ip === ip) return allServers[len];
-		}
-		return false;
 	}
 
 	function processInput(line) {
@@ -215,30 +177,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		"Hunter",
 	];
 
-	let serverList;
-	let allServers = [];
-	try {
-		serverList = await get("https://moomoo.io/serverData");
-		serverList = serverList.substring(serverList.indexOf("{")).replace(";", "");
-		serverList = JSON.parse(serverList);
-		const servers = serverList.servers;
-		let len = servers.length;
-		let server;
-		let games;
-		let gameLen;
-		while (len--) {
-			server = servers[len];
-			games = server.games;
-			gameLen = games.length;
-			while (gameLen--) {
-				allServers.push({id: `${server.region}:${server.index}:${gameLen}`, ip: server.ip, gameIndex: gameLen});
-			}
-		}
-	} catch (e) {
-		console.error("Failed to load server data.");
-		process.exit();
-	}
-
 	const bots = [];
 	const tribes = {};
 	const players = {};
@@ -310,8 +248,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				});
 				// Leaderboard
 				sk.on("5", data => {
-					if (probeName){
-						if ((probeName instanceof RegExp && data.filter(d => typeof d === "string" && d.match(probeName)).length > 0) || (typeof probeName === "string" && data.indexOf(probeName) > -1)){
+					if (probeName) {
+						if ((probeName instanceof RegExp && data.filter(d => typeof d === "string" && d.match(probeName)).length > 0) || (typeof probeName === "string" && data.indexOf(probeName) > -1)) {
 							console.log(`${getServerByIp(this.ip).id}`);
 							sk.disconnect();
 						}
@@ -320,8 +258,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				// ID (tribes[name, owner])
 				sk.on("id", (data) => {
 					data.teams.forEach(t => {
-						if (probeTribe){
-							if ((probeTribe instanceof RegExp && t.sid.match(probeTribe)) || (typeof probeTribe === "string" && t.sid === probeTribe)){
+						if (probeTribe) {
+							if ((probeTribe instanceof RegExp && t.sid.match(probeTribe)) || (typeof probeTribe === "string" && t.sid === probeTribe)) {
 								console.log(`${getServerByIp(this.ip).id}`);
 								sk.disconnect();
 							}
@@ -667,7 +605,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	}
 
 	function escapeRegExp(s) {
-		if (s.startsWith("/") && s.endsWith("/")){
+		if (s.startsWith("/") && s.endsWith("/")) {
 			s = s.split("");
 			s = s.slice(1, s.length - 1).join("");
 		}
@@ -693,7 +631,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	chat && (chat = chat.slice(0, 30));
 
 	if (probe) {
-		if (probeRegex){
+		if (probeRegex) {
 			console.log(`Initiating probe for${(args.probeTribe && args.probeTribe.value) ? ` tribe ${args.probeTribe.value}` : ""}${(args.probeName && args.probeName.value) ? ` player ${args.probeName.value}` : ""} using regex.`);
 		}else{
 			console.log(`Initiating probe for${probeTribe ? ` tribe ${probeTribe}` : ""}${probeName ? ` player ${probeName}` : ""}.`);
